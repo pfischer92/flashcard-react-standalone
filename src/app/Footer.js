@@ -1,8 +1,10 @@
 import React from 'react';
+import { Row, Col } from 'reactstrap'
 
-const Footer = props => 
-    <section>
-        { props.message }
-    </section>
+const Footer = ({ leftMessage, rightMessage }) => 
+    <Row>
+        <Col>{ leftMessage }</Col>
+        <Col className='text-right'>{ rightMessage }</Col>
+    </Row>
 
 export default Footer;

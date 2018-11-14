@@ -1,11 +1,15 @@
 import React, { Component } from 'react'
+import _ from 'lodash'
 import QuestionnaireTable from './QuestionnaireTable'
+import Footer from '../app/Footer'
 
 class QuestionnaireContainer extends Component {
   render() {
+      const numberOfQuestionnaire = `Total of ${ _.size(this.props.qs)} questionnaires`
     return <div>
       <h3>Questionnaires</h3>
       <QuestionnaireTable qs={ this.props.qs } />
+      <Footer leftMessage='&copy; The FHNW Team' rightMessage={numberOfQuestionnaire} />
     </div>
   }
 }
