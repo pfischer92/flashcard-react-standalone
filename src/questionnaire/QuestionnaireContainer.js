@@ -1,15 +1,35 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
 import QuestionnaireTable from './QuestionnaireTable'
-import Footer from '../app/Footer'
+import QuestionnaireCreateDialog from './QuestionnaireCreateDialog'
 
 class QuestionnaireContainer extends Component {
+
+  constructor(props) {
+    super(props)
+    this.state = { qs: this.props.qs}
+  }
+
+  generateIndex = questionnaires => 
+    _.get(_.last(questionnaires), 'id', 0) + 1
+
+  create = (title, description) => {
+    this.setState({ qs: _.concat(this.state.qs, { id: this.generateIndex(this.state.qs), title: title, description: description }) })
+  }
+
+  update = questionnaire => {
+    this.setState({ qs: _.map(this.state.qs, q => q.id === questionnaire.id ? questionnaire : q) })
+  }
+
+  _delete = id => {
+    this.setState({ qs : _.reject(this.state.qs, { id: id })})
+  }
+
   render() {
-      const numberOfQuestionnaire = `Total of ${ _.size(this.props.qs)} questionnaires`
     return <div>
+      <QuestionnaireCreateDialog create={ this.create } />
       <h3>Questionnaires</h3>
-      <QuestionnaireTable qs={ this.props.qs } />
-      <Footer leftMessage='&copy; The FHNW Team' rightMessage={numberOfQuestionnaire} />
+      <QuestionnaireTable update={ this.update } _delete={ this._delete } qs={ this.state.qs } />
     </div>
   }
 }
