@@ -23,8 +23,8 @@ class QuestionnaireCreateDialog extends Component {
 
     onSubmit = event => {
         event.preventDefault()
-        this.setState({ title: '', description: '', showModal: false })
         this.props.create(this.state.title, this.state.description)
+        this.setState({ title: '', description: '', showModal: false })
     }
 
     render() {

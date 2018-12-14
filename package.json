@@ -1,5 +1,5 @@
 {
-  "name": "flashcard-react-standalone",
+  "name": "flashcard-react-rest",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
