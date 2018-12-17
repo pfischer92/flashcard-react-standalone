@@ -1,85 +1,101 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
+import Loader from '../misc/Loader'
+import Message from '../misc/Message'
 import QuestionnaireTable from './QuestionnaireTable'
 import QuestionnaireCreateDialog from './QuestionnaireCreateDialog'
 
 
 class QuestionnaireContainer extends Component {
 
-  constructor(props) {
-    super(props)
-    this.state = { qs: [] }
-  }
+    constructor(props) {
+        super(props)
+        this.state = { qs: [], isLoading: false, error: false, message: null }
+    }
 
-  generateIndex = questionnaires => 
-    _.get(_.last(questionnaires), 'id', 0) + 1
+    generateIndex = questionnaires =>
+        _.get(_.last(questionnaires), 'id', 0) + 1
 
-  create = (title, description) => {
-    fetch(this.props.serverUrl, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json; charset=utf-8'
-      },
-      body: JSON.stringify({ title: title, description: description })
-    })
-      .then(response => {
-        if(response.ok) {
-          return response.json()
-        }
-        throw new Error('Network response was not ok.');
-      })
-      .then(questionnaire => this.setState({ qs: _.concat(this.state.qs, questionnaire) }))
-      .catch(error => console.error(error))
-  }
+    create = (title, description) => {
+        this.ajax(
+            this.props.serverUrl,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                },
+                body: JSON.stringify({ title: title, description: description })
+            },
+            questionnaires => this.setState({ qs: _.concat(this.state.qs, questionnaires) })
+        )
+    }
 
-  update = questionnaire => {
-    fetch(`${ this.props.serverUrl }/${ questionnaire.id }`, {
-      method: 'PUT',
-      headers: {
-          'Content-Type': 'application/json; charset=utf-8'
-      },
-      body: JSON.stringify(questionnaire)
-    })
-      .then(response => {
-        if(response.ok) {
-          return response.json()
-        }
-        throw new Error('Network response was not ok.');
-      })
-      .then(questionnaire => this.setState({ qs: _.map(this.state.qs, q => q.id === questionnaire.id ? questionnaire : q) }))
-      .catch(error => console.error(error))
-  }
+    read = () => this.ajax(
+        this.props.serverUrl,
+        { method: 'GET' },
+        questionnaires => this.setState({ qs: questionnaires })
+    )
 
-  _delete = id => {
-    fetch(`${ this.props.serverUrl }/${ id }`, {
-      method: 'DELETE'
-    })
-      .then(response => {
-        if(response.ok) {
-          this.setState({ qs : _.reject(this.state.qs, { id: id })})
-        }
-        else {
-          throw new Error('Network response was not ok.');
-        }
-      })
-      .catch(error => console.error(error))
-    
-  }
-  
-  componentDidMount() {
-    fetch(this.props.serverUrl)
-      .then(response => response.json())
-      .then(questionnaires => this.setState({ qs: questionnaires }))
-      .catch(error => console.error(error))
-  }
+    update = questionnaire => {
+        this.ajax(
+            `${this.props.serverUrl}/${questionnaire.id}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                },
+                body: JSON.stringify(questionnaire)
+            },
+            questionnaire => this.setState({ qs: _.map(this.state.qs, q => q.id === questionnaire.id ? questionnaire : q) })
+        )
+    }
 
-  render() {
-    return <div>
-      <QuestionnaireCreateDialog create={ this.create } />
-      <h3>Questionnaires</h3>
-      <QuestionnaireTable update={ this.update } _delete={ this._delete } qs={ this.state.qs } />
-    </div>
-  }
+    _delete = id => {
+        this.ajax(
+            `${this.props.serverUrl}/${id}`,
+            { method: 'DELETE' },
+            () => this.setState({ qs: _.reject(this.state.qs, { id: id }) })
+        )
+    }
+
+    ajax = (url, request, successFn) => {
+        this.setState({ isLoading: true, error: false, message: null })
+        fetch(url, request)
+            .then(response => {
+                if (response.ok) {
+                    this.setState({ isLoading: false })
+                    return response.status !== 204 ? response.json() : null
+                }
+
+                throw new Error(response.error ? response.error : 'Network response was not ok.')
+            })
+            .then(successFn)
+            .catch(error => {
+                this.setState({ isLoading: false, error: true, message: error.message })
+                console.error(error)
+            })
+    }
+
+    componentDidMount() {
+        this.read()
+    }
+
+    renderQuestionnaireTable = () =>
+        this.state.isLoading ?
+            <Loader /> :
+            <QuestionnaireTable update={this.update} _delete={this._delete} qs={this.state.qs} />
+
+    renderMessage = () =>
+        this.state.error ? <Message message={this.state.message} /> : null
+
+    render() {
+        return <div>
+            <QuestionnaireCreateDialog create={this.create} />
+            <h3>Questionnaires</h3>
+            {this.renderMessage()}
+            {this.renderQuestionnaireTable()}
+        </div>
+    }
 }
 
 export default QuestionnaireContainer;

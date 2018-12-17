@@ -11,11 +11,15 @@ class QuestionnaireUpdateDialog extends Component {
     }
     
     open = () =>  {
-        this.setState({ showModal: true })
+        this.setState({ title: this.props.questionnaire.title, 
+                        description: this.props.questionnaire.description, 
+                        showModal: true })
     }
 
     close = () => {
-        this.setState({ title: '', description: '', showModal: false })
+        this.setState({ title: '', 
+                        description: '', 
+                        showModal: false })
     }
 
     onChange = event => {
